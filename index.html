@@ -157,7 +157,7 @@
   /* 右側內容 */
   .content{
     flex:1;
-    background:var(--content-bg);
+    background:#000000;
     overflow-y:auto;
     padding:24px 60px 60px;
   }
@@ -274,7 +274,7 @@ const ICONBG = {
   control:"#8e8e93", display:"#0a84ff", siri:"linear-gradient(160deg,#ff2d55,#af52de)",
   screentime:"linear-gradient(160deg,#af52de,#5856d6)", faceid:"#34c759",
   privacy:"#0a84ff", appstore:"#0a84ff", camera:"#8e8e93", wallpaper:"#5856d6",
-  applecare:"#8e8e93", health:"linear-gradient(160deg,#ff2d55,#ff375f)",
+  applecare:"#ffffff", health:"#32ade6",
   airdrop:"#0a84ff", airplay:"#0a84ff", screenshot:"#0a84ff", about:"#8e8e93",
   update:"#8e8e93", storage:"#8e8e93", vpn:"#8e8e93", date:"#8e8e93",
   keyboard:"#8e8e93", language:"#8e8e93", reset:"#8e8e93", legal:"#8e8e93"
@@ -307,8 +307,8 @@ function svgIcon(name, size){
     appstore: `<path d="M6 8V6a6 6 0 0 1 12 0v2" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="4" y="8" width="16" height="13" rx="2" fill="#fff"/>`,
     camera: `<rect x="2" y="7" width="20" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="13.5" r="4" fill="none" stroke="#fff" stroke-width="1.7"/><rect x="8" y="4" width="8" height="3" rx="1" fill="#fff"/>`,
     wallpaper: `<rect x="2" y="4" width="20" height="16" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="8" cy="9" r="2" fill="#fff"/><path d="M3 17l5-6 4 4 3-4 6 6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>`,
-    applecare: `<path d="M12 20s-7-4.35-7-9.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 7 4.5C19 15.65 12 20 12 20z" fill="#fff"/>`,
-    health: `<path d="M12 20s-7-4.35-7-9.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 7 4.5C19 15.65 12 20 12 20z" fill="none" stroke="#fff" stroke-width="1.6"/><polyline points="6,12 9,12 10.5,9 13,15 14.5,12 18,12" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>`,
+    applecare: `<path d="M15.4 6.9c.7-.9 1.2-2.1 1.1-3.3-1.1.1-2.4.7-3.1 1.6-.7.8-1.3 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z" fill="#000"/><path d="M18.8 17.5c-.3.7-.6 1.4-1.1 2-.6.9-1.3 1.9-2.2 1.9-.9 0-1.2-.6-2.2-.6-1.1 0-1.4.6-2.3.6-.9 0-1.6-1-2.2-1.9-1.6-2.3-2.8-6.4-1.2-9.3.8-1.4 2.2-2.3 3.7-2.3 1 0 1.9.7 2.5.7.6 0 1.7-.8 2.9-.7.5 0 1.9.2 2.8 1.5-.1 0-1.7 1-1.7 2.9 0 2.3 2 3.1 2.1 3.1 0 .1-.3 1.2-1.1 2.1z" fill="#000"/>`,
+    health: `<path d="M12 20s-7-4.35-7-9.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 7 4.5C19 15.65 12 20 12 20z" fill="#fff"/>`,
     airdrop: `<g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9a13 13 0 0 1 16 0"/><path d="M7 12.5a8.5 8.5 0 0 1 10 0"/></g><circle cx="12" cy="17" r="2.3" fill="#fff"/>`,
     airplay: `<rect x="2" y="2" width="20" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><polygon points="12,16.5 8,21.5 16,21.5" fill="#fff"/>`,
     screenshot: `<path d="M4 8V5a1 1 0 0 1 1-1h3M20 8V5a1 1 0 0 0-1-1h-3M4 16v3a1 1 0 0 0 1 1h3M20 16v3a1 1 0 0 1-1 1h-3" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="#fff"/>`,
@@ -385,7 +385,7 @@ const pages = {
         {label:'日期與時間', key:'date', chevron:true},
         {label:'鍵盤', key:'keyboard', chevron:true},
         {label:'語言與地區', key:'language', chevron:true},
-        {label:'字典', key:'date', chevron:true},
+        {label:'字典', key:'language', chevron:true},
       ],
       [
         {label:'傳輸或還原 iPad', key:'reset', chevron:true},
@@ -510,7 +510,7 @@ buildNavGroup(document.getElementById('navGroupE'), sidebarData.E);
 
 /* ---------- 產生右側內容 ---------- */
 function renderRow(r){
-  const iconHtml = r.iconSym ? `<div class="row-icon" style="background:${ICONBG[r.iconKey]||'#8e8e93'}">${r.iconSym}</div>` : '';
+  const iconHtml = r.key ? `<div class="row-icon" style="background:${ICONBG[r.key]||'#8e8e93'}">${svgIcon(r.key,16)}</div>` : '';
   let right = '';
   if(r.type==='switch'){
     right = `<div class="switch ${r.on?'on':''}" data-inline-switch></div>`;
@@ -519,7 +519,7 @@ function renderRow(r){
   } else if(r.chevron){
     right = `<span class="chevron">›</span>`;
   }
-  const cls = 'row' + (r.iconSym?' has-icon':'') + (r.danger?' danger-row':'');
+  const cls = 'row' + (r.key?' has-icon':'') + (r.danger?' danger-row':'');
   return `<div class="${cls}">${iconHtml}<div class="row-label" style="${r.danger?'color:var(--danger)':''}">${r.label}</div>${right}</div>`;
 }
 
