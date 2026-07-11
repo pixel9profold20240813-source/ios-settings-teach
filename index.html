@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設定 - 教學模擬器</title>
+<style>
+  :root{
+    --sidebar-bg:#000000;
+    --content-bg:#1c1c1e;
+    --page-bg:#000000;
+    --group-bg:#1c1c1e;
+    --row-hover:#2c2c2e;
+    --separator:rgba(255,255,255,0.15);
+    --text-primary:#ffffff;
+    --text-secondary:#8e8e93;
+    --accent:#0a84ff;
+    --toggle-on:#34c759;
+    --toggle-off:#39393d;
+    --danger:#ff453a;
+    --sidebar-w:375px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:#000;
+    font-family:-apple-system, "SF Pro Text", "PingFang TC", "Helvetica Neue", Arial, sans-serif;
+    color:var(--text-primary);
+    overflow:hidden;
+    user-select:none;
+  }
+  .device{
+    width:100%; height:100vh;
+    display:flex; flex-direction:column;
+    background:#000;
+  }
+  /* 狀態列 */
+  .statusbar{
+    height:28px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 22px;
+    font-size:14px; font-weight:600;
+    color:#fff;
+    flex-shrink:0;
+  }
+  .statusbar .right{display:flex; align-items:center; gap:6px; font-weight:400;}
+  .statusbar .battery{
+    width:24px; height:12px; border:1px solid rgba(255,255,255,0.6); border-radius:3px;
+    position:relative; padding:1px;
+  }
+  .statusbar .battery::after{
+    content:""; position:absolute; right:-3px; top:3px; width:2px; height:6px;
+    background:rgba(255,255,255,0.6); border-radius:0 1px 1px 0;
+  }
+  .statusbar .battery-fill{width:79%; height:100%; background:#fff; border-radius:1px;}
+
+  .main{flex:1; display:flex; min-height:0;}
+
+  /* 左側選單 */
+  .sidebar{
+    width:var(--sidebar-w);
+    background:var(--sidebar-bg);
+    flex-shrink:0;
+    overflow-y:auto;
+    padding:10px 16px 30px;
+    border-right:1px solid rgba(255,255,255,0.08);
+  }
+  .search-box{
+    background:#1c1c1e;
+    border-radius:10px;
+    height:36px;
+    display:flex; align-items:center;
+    padding:0 8px;
+    color:var(--text-secondary);
+    font-size:16px;
+    margin-bottom:14px;
+  }
+  .search-box svg{width:16px;height:16px;margin-right:6px;flex-shrink:0;}
+
+  .profile-row{
+    display:flex; align-items:center; gap:14px;
+    padding:8px 4px 16px;
+    cursor:pointer;
+  }
+  .profile-avatar{
+    width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(160deg,#6ee7a0,#34c759);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; flex-shrink:0;
+  }
+  .profile-name{font-size:19px; font-weight:600;}
+  .profile-sub{font-size:13px; color:var(--text-secondary); margin-top:1px;}
+
+  .banner-row{
+    background:var(--group-bg);
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px;
+    font-size:15px;
+    margin-bottom:16px;
+    cursor:pointer;
+  }
+  .banner-badge{
+    background:#ff453a; color:#fff; font-size:12px; font-weight:700;
+    min-width:20px; height:20px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; padding:0 5px;
+  }
+
+  .nav-group{
+    background:var(--group-bg);
+    border-radius:10px;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .nav-item{
+    display:flex; align-items:center; gap:12px;
+    padding:9px 12px;
+    min-height:44px;
+    font-size:16px;
+    position:relative;
+    cursor:pointer;
+  }
+  .nav-item:not(:last-child)::after{
+    content:"";
+    position:absolute; left:46px; right:0; bottom:0;
+    height:1px; background:var(--separator);
+  }
+  .nav-item:hover{background:var(--row-hover);}
+  .nav-item.active{background:#0a5fd6;}
+  .nav-item.active .nav-value, .nav-item.active .chevron{color:#fff !important; opacity:0.85;}
+  .nav-icon{
+    width:29px; height:29px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; color:#fff; flex-shrink:0;
+  }
+  .nav-label{flex:1; white-space:nowrap;}
+  .nav-value{color:var(--text-secondary); font-size:16px; margin-right:2px;}
+  .chevron{color:#545458; font-size:14px;}
+
+  /* 開關 */
+  .switch{
+    width:51px; height:31px; border-radius:16px;
+    background:var(--toggle-off);
+    position:relative; flex-shrink:0;
+    transition:background .2s;
+    cursor:pointer;
+  }
+  .switch.on{background:var(--toggle-on);}
+  .switch::after{
+    content:""; position:absolute; top:2px; left:2px;
+    width:27px; height:27px; border-radius:50%; background:#fff;
+    box-shadow:0 2px 4px rgba(0,0,0,0.3);
+    transition:left .2s;
+  }
+  .switch.on::after{left:22px;}
+
+  /* 右側內容 */
+  .content{
+    flex:1;
+    background:var(--content-bg);
+    overflow-y:auto;
+    padding:24px 60px 60px;
+  }
+  .page-header{
+    text-align:center;
+    margin-bottom:24px;
+  }
+  .page-icon{
+    width:76px; height:76px; border-radius:17px;
+    margin:0 auto 12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:40px; color:#fff;
+  }
+  .page-title{font-size:30px; font-weight:700;}
+  .page-desc{
+    color:var(--text-secondary); font-size:15px; margin-top:8px;
+    max-width:640px; margin-left:auto; margin-right:auto; line-height:1.5;
+  }
+
+  .content-wrap{max-width:820px; margin:0 auto;}
+
+  .group{
+    background:var(--group-bg);
+    border-radius:12px;
+    margin-bottom:22px;
+    overflow:hidden;
+  }
+  .group-title{
+    font-size:13px; color:var(--text-secondary);
+    text-transform:uppercase;
+    padding:0 4px 6px;
+  }
+  .row{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 16px;
+    min-height:46px;
+    position:relative;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .row:not(:last-child)::after{
+    content:"";
+    position:absolute; left:16px; right:0; bottom:0;
+    height:1px; background:var(--separator);
+  }
+  .row.has-icon:not(:last-child)::after{left:56px;}
+  .row:hover{background:var(--row-hover);}
+  .row-icon{
+    width:29px; height:29px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; color:#fff; flex-shrink:0;
+  }
+  .row-label{flex:1;}
+  .row-value{color:var(--text-secondary);}
+  .row-desc{
+    padding:6px 16px 2px;
+    font-size:13px; color:var(--text-secondary); line-height:1.5;
+  }
+  .link-row{color:var(--accent);}
+  .danger-row{color:var(--danger);}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2); border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="device">
+  <div class="statusbar">
+    <div id="statusTime">中午 12:20　7月11日週六</div>
+    <div class="right">
+      <span style="display:flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 15l6-6M8 12l-2 2a3 3 0 0 0 4 4l2-2M16 12l2-2a3 3 0 0 0-4-4l-2 2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+      <span style="display:flex;align-items:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="10" height="8" rx="1.5" fill="#fff"/><path d="M7 10V7a3 3 0 0 1 6 0v3" fill="none" stroke="#fff" stroke-width="1.6"/></svg></span>
+      <span>79%</span>
+      <div class="battery"><div class="battery-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar" id="sidebar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        搜尋
+      </div>
+
+      <div class="profile-row">
+        <div class="profile-avatar"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 20c0-4.5 3.5-7 8-7s8 2.5 8 7" fill="#fff"/></svg></div>
+        <div>
+          <div class="profile-name">使用者</div>
+          <div class="profile-sub">Apple 帳號、iCloud 和其他內容</div>
+        </div>
+      </div>
+
+      <div class="banner-row">
+        <span>iPad 尚未進行備份</span>
+        <div class="banner-badge">1</div>
+      </div>
+
+      <div class="nav-group" id="navGroupA"></div>
+      <div class="nav-group" id="navGroupB"></div>
+      <div class="nav-group" id="navGroupC"></div>
+      <div class="nav-group" id="navGroupD"></div>
+      <div class="nav-group" id="navGroupE"></div>
+    </div>
+
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- 資料定義 ---------- */
+const ICONBG = {
+  airplane:"#ff9500", wifi:"#007aff", bluetooth:"#0a84ff", battery:"#34c759",
+  general:"#8e8e93", accessibility:"#0a84ff", home:"#8e8e93", multitask:"#8e8e93",
+  control:"#8e8e93", display:"#0a84ff", siri:"linear-gradient(160deg,#ff2d55,#af52de)",
+  screentime:"linear-gradient(160deg,#af52de,#5856d6)", faceid:"#34c759",
+  privacy:"#0a84ff", appstore:"#0a84ff", camera:"#8e8e93", wallpaper:"#5856d6",
+  applecare:"#8e8e93", health:"linear-gradient(160deg,#ff2d55,#ff375f)",
+  airdrop:"#0a84ff", airplay:"#0a84ff", screenshot:"#0a84ff", about:"#8e8e93",
+  update:"#8e8e93", storage:"#8e8e93", vpn:"#8e8e93", date:"#8e8e93",
+  keyboard:"#8e8e93", language:"#8e8e93", reset:"#8e8e93", legal:"#8e8e93"
+};
+
+function icon(sym,key,size){
+  const bg = ICONBG[key] || "#8e8e93";
+  const isGrad = String(bg).startsWith("linear");
+  return `<div class="${size||'nav-icon'}" style="${isGrad?('background:'+bg):('background:'+bg)}">${sym}</div>`;
+}
+
+/* ---------- SVG 圖示庫（取代 emoji） ---------- */
+function svgIcon(name, size){
+  size = size || 18;
+  const S = `width="${size}" height="${size}" viewBox="0 0 24 24"`;
+  const shapes = {
+    airplane: `<polygon points="3,11 21,3 13,21 10,13" fill="#fff"/>`,
+    wifi: `<g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9a13 13 0 0 1 16 0"/><path d="M7 12.5a8.5 8.5 0 0 1 10 0"/><path d="M10 16a4 4 0 0 1 4 0"/></g><circle cx="12" cy="19.3" r="1.3" fill="#fff"/>`,
+    bluetooth: `<path d="M6.5 6.5L17.5 17.5L12 22V2L17.5 6.5L6.5 17.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+    battery: `<rect x="2" y="7" width="18" height="10" rx="2" fill="none" stroke="#fff" stroke-width="1.8"/><rect x="4.5" y="9.5" width="12" height="5" rx="1" fill="#fff"/><rect x="21" y="10" width="2" height="4" rx="1" fill="#fff"/>`,
+    general: `<circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="2.2"/><g stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></g>`,
+    accessibility: `<circle cx="12" cy="12" r="10" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="8" r="1.8" fill="#fff"/><path d="M7 12h10M12 12v6M9 20l3-2 3 2" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    home: `<rect x="3" y="3" width="8" height="8" rx="2" fill="#fff"/><rect x="13" y="3" width="8" height="8" rx="2" fill="#fff"/><rect x="3" y="13" width="8" height="8" rx="2" fill="#fff"/><rect x="13" y="13" width="8" height="8" rx="2" fill="#fff"/>`,
+    multitask: `<rect x="3" y="7" width="13" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="8" y="3" width="13" height="13" rx="2" fill="#1c1c1e" stroke="#fff" stroke-width="1.6"/>`,
+    display: `<circle cx="12" cy="12" r="4" fill="#fff"/><g stroke="#fff" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/></g>`,
+    siri: `<circle cx="12" cy="12" r="9" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="1.5" fill="#fff"/>`,
+    screentime: `<path d="M6 3h12M6 21h12M7 3c0 5 5 6.5 5 9s-5 4-5 9M17 3c0 5-5 6.5-5 9s5 4 5 9" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>`,
+    faceid: `<path d="M4 8V5a1 1 0 0 1 1-1h3M20 8V5a1 1 0 0 0-1-1h-3M4 16v3a1 1 0 0 0 1 1h3M20 16v3a1 1 0 0 1-1 1h-3" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="9" cy="11" r="1" fill="#fff"/><circle cx="15" cy="11" r="1" fill="#fff"/><path d="M9 15c1 1 5 1 6 0" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>`,
+    privacy: `<path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
+    appstore: `<path d="M6 8V6a6 6 0 0 1 12 0v2" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="4" y="8" width="16" height="13" rx="2" fill="#fff"/>`,
+    camera: `<rect x="2" y="7" width="20" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="13.5" r="4" fill="none" stroke="#fff" stroke-width="1.7"/><rect x="8" y="4" width="8" height="3" rx="1" fill="#fff"/>`,
+    wallpaper: `<rect x="2" y="4" width="20" height="16" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="8" cy="9" r="2" fill="#fff"/><path d="M3 17l5-6 4 4 3-4 6 6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>`,
+    applecare: `<path d="M12 20s-7-4.35-7-9.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 7 4.5C19 15.65 12 20 12 20z" fill="#fff"/>`,
+    health: `<path d="M12 20s-7-4.35-7-9.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 7 4.5C19 15.65 12 20 12 20z" fill="none" stroke="#fff" stroke-width="1.6"/><polyline points="6,12 9,12 10.5,9 13,15 14.5,12 18,12" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>`,
+    airdrop: `<g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 9a13 13 0 0 1 16 0"/><path d="M7 12.5a8.5 8.5 0 0 1 10 0"/></g><circle cx="12" cy="17" r="2.3" fill="#fff"/>`,
+    airplay: `<rect x="2" y="2" width="20" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><polygon points="12,16.5 8,21.5 16,21.5" fill="#fff"/>`,
+    screenshot: `<path d="M4 8V5a1 1 0 0 1 1-1h3M20 8V5a1 1 0 0 0-1-1h-3M4 16v3a1 1 0 0 0 1 1h3M20 16v3a1 1 0 0 1-1 1h-3" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="#fff"/>`,
+    about: `<circle cx="12" cy="12" r="9" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="8" r="1" fill="#fff"/><line x1="12" y1="11" x2="12" y2="17" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`,
+    update: `<path d="M4 12a8 8 0 0 1 14-5.2M20 12a8 8 0 0 1-14 5.2" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M18 3v5h-5M6 21v-5h5" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`,
+    storage: `<ellipse cx="12" cy="6" rx="8" ry="3" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" fill="none" stroke="#fff" stroke-width="1.6"/>`,
+    date: `<rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><line x1="3" y1="9" x2="21" y2="9" stroke="#fff" stroke-width="1.6"/><line x1="7" y1="2" x2="7" y2="6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><line x1="17" y1="2" x2="17" y2="6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>`,
+    keyboard: `<rect x="2" y="6" width="20" height="13" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><g fill="#fff"><rect x="5" y="9.5" width="2" height="2"/><rect x="9" y="9.5" width="2" height="2"/><rect x="13" y="9.5" width="2" height="2"/><rect x="17" y="9.5" width="2" height="2"/><rect x="5" y="13.5" width="2" height="2"/><rect x="9" y="13.5" width="10" height="2"/><rect x="17" y="13.5" width="2" height="2"/></g>`,
+    language: `<circle cx="12" cy="12" r="9" fill="none" stroke="#fff" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="4" ry="9" fill="none" stroke="#fff" stroke-width="1.6"/><line x1="3" y1="12" x2="21" y2="12" stroke="#fff" stroke-width="1.6"/>`,
+    reset: `<path d="M4 12a8 8 0 0 1 14-5.2M20 12a8 8 0 0 1-14 5.2" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M18 3v5h-5M6 21v-5h5" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`,
+    vpn: `<rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#fff" stroke-width="1.6"/>`,
+    legal: `<rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><line x1="8" y1="8" x2="16" y2="8" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><line x1="8" y1="16" x2="13" y2="16" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>`,
+    lockmini: `<rect x="5" y="10" width="10" height="8" rx="1.5" fill="#fff"/><path d="M7 10V7a3 3 0 0 1 6 0v3" fill="none" stroke="#fff" stroke-width="1.5"/>`,
+    link: `<path d="M9 15l6-6M8 12l-2 2a3 3 0 0 0 4 4l2-2M16 12l2-2a3 3 0 0 0-4-4l-2 2" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>`,
+    person: `<circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 20c0-4.5 3.5-7 8-7s8 2.5 8 7" fill="#fff"/>`,
+    check: `<polyline points="4,12 9,17 20,6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+    search: `<circle cx="11" cy="11" r="7" fill="none" stroke="#fff" stroke-width="1.8"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>`,
+  };
+  return `<svg ${S} fill="none">${shapes[name] || shapes.about}</svg>`;
+}
+
+const sidebarData = {
+  A:[
+    {id:'airplane', label:'飛航模式', key:'airplane', type:'switch', on:false},
+    {id:'wifi', label:'Wi-Fi', key:'wifi', value:'Free Wifi'},
+    {id:'bluetooth', label:'藍牙', key:'bluetooth', value:'開啟'},
+    {id:'battery', label:'電池', key:'battery'},
+  ],
+  B:[
+    {id:'general', label:'一般', key:'general'},
+    {id:'accessibility', label:'輔助使用', key:'accessibility'},
+    {id:'home', label:'主畫面與 App 資料庫', key:'home'},
+    {id:'multitask', label:'多工處理與手勢', key:'multitask'},
+    {id:'camera', label:'相機', key:'camera'},
+    {id:'wallpaper', label:'背景圖片', key:'wallpaper'},
+  ],
+  C:[
+    {id:'display', label:'顯示與亮度', key:'display'},
+    {id:'siri', label:'Siri 與搜尋', key:'siri'},
+    {id:'screentime', label:'螢幕使用時間', key:'screentime'},
+  ],
+  D:[
+    {id:'faceid', label:'面容 ID 與密碼', key:'faceid'},
+    {id:'privacy', label:'隱私權與安全性', key:'privacy'},
+  ],
+  E:[
+    {id:'appstore', label:'App Store', key:'appstore'},
+  ]
+};
+
+/* 每頁的右側內容（groups: 每個 group 是一個 row 陣列） */
+const pages = {
+  general:{
+    key:'general', title:'一般',
+    desc:'管理 iPad 的整體設定和偏好設定，例如軟體更新、裝置語言、AirDrop 等。',
+    groups:[
+      [
+        {label:'關於本機', chevron:true, key:'about'},
+        {label:'軟體更新', chevron:true, key:'update', value:'已是最新版本'},
+        {label:'iPad 儲存空間', chevron:true, key:'storage'},
+      ],
+      [
+        {label:'AppleCare 與保固', key:'applecare', chevron:true, isApple:true},
+      ],
+      [
+        {label:'健康資料', key:'health', chevron:true, isApple:true},
+      ],
+      [
+        {label:'AirDrop', key:'airdrop', chevron:true},
+        {label:'AirPlay 與接續互通', key:'airplay', chevron:true},
+        {label:'螢幕擷取', key:'screenshot', chevron:true},
+      ],
+      [
+        {label:'日期與時間', key:'date', chevron:true},
+        {label:'鍵盤', key:'keyboard', chevron:true},
+        {label:'語言與地區', key:'language', chevron:true},
+        {label:'字典', key:'date', chevron:true},
+      ],
+      [
+        {label:'傳輸或還原 iPad', key:'reset', chevron:true},
+      ],
+      [
+        {label:'VPN 與裝置管理', key:'vpn', chevron:true},
+      ],
+      [
+        {label:'重置', key:'reset', chevron:true, danger:true},
+      ],
+      [
+        {label:'法律與監管', key:'legal', chevron:true},
+      ],
+    ]
+  },
+  wifi:{
+    key:'wifi', title:'Wi-Fi',
+    desc:'',
+    custom:'wifi'
+  },
+  bluetooth:{
+    key:'bluetooth', title:'藍牙',
+    desc:'',
+    custom:'bluetooth'
+  },
+  battery:{
+    key:'battery', title:'電池',
+    desc:'',
+    custom:'battery'
+  },
+  accessibility:{
+    key:'accessibility', title:'輔助使用',
+    desc:'客製化 iPad，符合你的視力、肢體動作、聽力和認知能力需求。',
+    groups:[
+      [
+        {label:'視覺', chevron:true},
+        {label:'實體及動作控制', chevron:true},
+        {label:'聽力', chevron:true},
+      ],
+      [
+        {label:'一般', chevron:true},
+      ]
+    ]
+  },
+  home:{
+    key:'home', title:'主畫面與 App 資料庫',
+    desc:'設定新 App 出現的位置，以及主畫面的顯示方式。',
+    groups:[[{label:'新增 App', value:'加入主畫面', chevron:false}]]
+  },
+  multitask:{
+    key:'multitask', title:'多工處理與手勢',
+    desc:'',
+    groups:[[
+      {label:'允許多個 App', type:'switch', on:true},
+      {label:'手勢', type:'switch', on:true},
+    ]]
+  },
+  camera:{
+    key:'camera', title:'相機',
+    desc:'', groups:[[{label:'網格',type:'switch',on:false},{label:'鏡像前置相機',type:'switch',on:false}]]
+  },
+  wallpaper:{
+    key:'wallpaper', title:'背景圖片',
+    desc:'', groups:[[{label:'新增背景圖片', chevron:true}]]
+  },
+  display:{
+    key:'display', title:'顯示與亮度',
+    desc:'', groups:[[
+      {label:'外觀：深色', chevron:true},
+      {label:'True Tone', type:'switch', on:true},
+    ]]
+  },
+  siri:{
+    key:'siri', title:'Siri 與搜尋',
+    desc:'', groups:[[{label:'聆聽「Siri」', type:'switch', on:true}]]
+  },
+  screentime:{
+    key:'screentime', title:'螢幕使用時間',
+    desc:'', groups:[[{label:'開啟螢幕使用時間', chevron:true}]]
+  },
+  faceid:{
+    key:'faceid', title:'面容 ID 與密碼',
+    desc:'', groups:[[{label:'輸入密碼以繼續', chevron:true}]]
+  },
+  privacy:{
+    key:'privacy', title:'隱私權與安全性',
+    desc:'', groups:[[
+      {label:'定位服務', chevron:true},
+      {label:'追蹤', chevron:true},
+    ]]
+  },
+  appstore:{
+    key:'appstore', title:'App Store',
+    desc:'', groups:[[{label:'App 內購買項目', type:'switch', on:true}]]
+  },
+};
+
+/* ---------- 產生左側選單 ---------- */
+function buildNavGroup(el, items){
+  el.innerHTML = items.map(item=>{
+    const bg = ICONBG[item.key]||'#8e8e93';
+    let right = '';
+    if(item.type==='switch'){
+      right = `<div class="switch ${item.on?'on':''}" data-switch="${item.id}"></div>`;
+    } else if(item.value){
+      right = `<span class="nav-value">${item.value}</span><span class="chevron">›</span>`;
+    } else {
+      right = `<span class="chevron">›</span>`;
+    }
+    return `<div class="nav-item" data-page="${item.id}">
+      <div class="nav-icon" style="background:${bg}">${svgIcon(item.key,18)}</div>
+      <div class="nav-label">${item.label}</div>
+      ${right}
+    </div>`;
+  }).join('');
+}
+buildNavGroup(document.getElementById('navGroupA'), sidebarData.A);
+buildNavGroup(document.getElementById('navGroupB'), sidebarData.B);
+buildNavGroup(document.getElementById('navGroupC'), sidebarData.C);
+buildNavGroup(document.getElementById('navGroupD'), sidebarData.D);
+buildNavGroup(document.getElementById('navGroupE'), sidebarData.E);
+
+/* ---------- 產生右側內容 ---------- */
+function renderRow(r){
+  const iconHtml = r.iconSym ? `<div class="row-icon" style="background:${ICONBG[r.iconKey]||'#8e8e93'}">${r.iconSym}</div>` : '';
+  let right = '';
+  if(r.type==='switch'){
+    right = `<div class="switch ${r.on?'on':''}" data-inline-switch></div>`;
+  } else if(r.value){
+    right = `<span class="row-value">${r.value}</span>${r.chevron?'<span class="chevron">›</span>':''}`;
+  } else if(r.chevron){
+    right = `<span class="chevron">›</span>`;
+  }
+  const cls = 'row' + (r.iconSym?' has-icon':'') + (r.danger?' danger-row':'');
+  return `<div class="${cls}">${iconHtml}<div class="row-label" style="${r.danger?'color:var(--danger)':''}">${r.label}</div>${right}</div>`;
+}
+
+function renderCustomWifi(){
+  return `
+  <div class="group">
+    <div class="row"><div class="row-label">Wi-Fi</div><div class="switch on" data-inline-switch></div></div>
+  </div>
+  <div class="group-title" style="margin-top:4px;">目前網路</div>
+  <div class="group">
+    <div class="row"><div class="row-label">Free Wifi</div><span class="chevron">›</span></div>
+  </div>
+  <div class="group-title">其他網路</div>
+  <div class="group">
+    <div class="row"><div class="row-label">住家 Wi-Fi</div><span class="row-value" style="display:flex;align-items:center;">${svgIcon('lockmini',14)}</span></div>
+    <div class="row"><div class="row-label">辦公室網路</div><span class="row-value" style="display:flex;align-items:center;">${svgIcon('lockmini',14)}</span></div>
+    <div class="row"><div class="row-label">鄰居的網路</div><span class="row-value" style="display:flex;align-items:center;">${svgIcon('lockmini',14)}</span></div>
+  </div>
+  <div class="row-desc" style="text-align:left; padding-left:0;">選擇一個 Wi-Fi 網路即可加入。（此為模擬畫面，點選不會真的連線）</div>
+  `;
+}
+function renderCustomBluetooth(){
+  return `
+  <div class="group">
+    <div class="row"><div class="row-label">藍牙</div><div class="switch on" data-inline-switch></div></div>
+  </div>
+  <div class="group-title">我的裝置</div>
+  <div class="group">
+    <div class="row"><div class="row-label">AirPods</div><span class="row-value" style="display:flex;align-items:center;gap:4px;">已連接 ${svgIcon('check',14)}</span></div>
+  </div>
+  <div class="group-title">其他裝置</div>
+  <div class="group">
+    <div class="row"><div class="row-label">藍牙鍵盤</div></div>
+    <div class="row"><div class="row-label">藍牙喇叭</div></div>
+  </div>
+  `;
+}
+function renderCustomBattery(){
+  return `
+  <div class="group">
+    <div class="row"><div class="row-label">電池百分比</div><div class="switch on" data-inline-switch></div></div>
+  </div>
+  <div class="group-title">上次充電 100% 至今</div>
+  <div class="group" style="padding:20px; text-align:center; color:var(--text-secondary);">
+    （此處在真機上會顯示電池用量圖表）
+  </div>
+  `;
+}
+
+function renderPage(id){
+  const p = pages[id];
+  if(!p) return;
+  const el = document.getElementById('content');
+  const bg = ICONBG[p.key] || '#8e8e93';
+  let body = '';
+  if(p.custom==='wifi') body = renderCustomWifi();
+  else if(p.custom==='bluetooth') body = renderCustomBluetooth();
+  else if(p.custom==='battery') body = renderCustomBattery();
+  else if(p.groups){
+    body = p.groups.map(g=>`<div class="group">${g.map(renderRow).join('')}</div>`).join('');
+  }
+  el.innerHTML = `
+    <div class="content-wrap">
+      <div class="page-header">
+        <div class="page-icon" style="background:${bg}">${svgIcon(p.key,38)}</div>
+        <div class="page-title">${p.title}</div>
+        ${p.desc?`<div class="page-desc">${p.desc}</div>`:''}
+      </div>
+      ${body}
+    </div>
+  `;
+  el.scrollTop = 0;
+}
+
+/* ---------- 事件綁定 ---------- */
+document.getElementById('sidebar').addEventListener('click', function(e){
+  const sw = e.target.closest('[data-switch]');
+  if(sw){
+    sw.classList.toggle('on');
+    e.stopPropagation();
+    return;
+  }
+  const item = e.target.closest('.nav-item');
+  if(item){
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    renderPage(item.dataset.page);
+  }
+});
+
+document.getElementById('content').addEventListener('click', function(e){
+  const sw = e.target.closest('[data-inline-switch]');
+  if(sw){ sw.classList.toggle('on'); }
+});
+
+/* 預設開啟「一般」 */
+document.querySelector('.nav-item[data-page="general"]').click();
+</script>
+</body>
+</html>
